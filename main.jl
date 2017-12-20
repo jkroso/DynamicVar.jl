@@ -1,4 +1,4 @@
-@require "github.com/jkroso/Prospects.jl" need
+@require "github.com/jkroso/Prospects.jl" need assoc
 
 struct DynamicVar
   name::Symbol
@@ -25,17 +25,11 @@ dynamic_let(ex) =
 dynamic_let!(ex) =
   quote
     t = current_task()
-    old = copyscope(t)
+    old = getscope(t)
     $([:(bind($(esc(b.args[1])), $(esc(b.args[2])), t)) for b in ex.args[2:end]]...)
     $(esc(ex.args[1]))
     setscope(t, old)
   end
-
-copyscope(t::Task) = begin
-  old = getscope(t)
-  setscope(t, copy(old))
-  old
-end
 
 setscope(t::Task, scope) = storage(t)[getscope] = scope
 
@@ -85,17 +79,18 @@ end
 
 parent(task::Task) = task.parent
 isroot(task::Task) = task.parent == task
+const empty_scope = Base.ImmutableDict{DynamicVar,Any}()
 getscope(task::Task) = begin
   s = storage(task)
   b = get(s, getscope, s)
   if b === s
-    s[getscope] = ObjectIdDict()
+    s[getscope] = empty_scope
   else
     b
   end
 end
 
-bind(var::DynamicVar, val, t::Task) = getscope(t)[var] = val
+bind(var::DynamicVar, val, t::Task) = setscope(t, assoc(getscope(t), var, val))
 bind(f::Function, var::DynamicVar, val) = begin
   t = Task(f)
   bind(var, val, t)
