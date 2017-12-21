@@ -69,7 +69,7 @@ storage(t::Task) =
     t.storage
   end
 
-@gensym secret_value
+const secret_value = gensym("secrete_value")
 
 need(var::DynamicVar) = begin
   value = getvalue(var, secret_value, current_task())
