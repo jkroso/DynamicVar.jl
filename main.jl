@@ -106,3 +106,6 @@ getvalue(var::DynamicVar, default, t::Task) =
   else
     getvalue(var, default, parent(t))
   end
+
+# enable var[] syntax instead of need(var)
+Base.getindex(var::DynamicVar) = need(var)
