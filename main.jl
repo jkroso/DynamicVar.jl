@@ -27,8 +27,9 @@ dynamic_let!(ex) =
     t = current_task()
     old = getscope(t)
     $([:(bind($(esc(b.args[1])), $(esc(b.args[2])), t)) for b in ex.args[2:end]]...)
-    $(esc(ex.args[1]))
+    result = $(esc(ex.args[1]))
     setscope(t, old)
+    result
   end
 
 setscope(t::Task, scope) = storage(t)[getscope] = scope
