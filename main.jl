@@ -83,12 +83,6 @@ getscope(task::Task) = begin
 end
 
 bind(var::DynamicVar, val, t::Task) = setscope(t, assoc(getscope(t), var, val))
-bind(f::Function, var::DynamicVar, val) = begin
-  t = Task(f)
-  bind(var, val, t)
-  schedule(t)
-  wait(t)
-end
 
 getvalue(var::DynamicVar, default, t::Task) =
   if haskey(getscope(t), var)
