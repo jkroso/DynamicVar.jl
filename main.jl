@@ -32,7 +32,7 @@ dynamic_let!(ex) =
     result
   end
 
-setscope(t::Task, scope) = storage(t)[getscope] = scope
+setscope(t::Task, scope) = Base.get_task_tls(t)[getscope] = scope
 
 """
 Create new or alter existing dynamic variables within a limited scope
@@ -63,18 +63,9 @@ macro dynamic!(def)
   error("Unsupported @dynamic! expression")
 end
 
-storage(t::Task) =
-  if t.storage === nothing
-    t.storage = ObjectIdDict()
-  else
-    t.storage
-  end
-
-const secret_value = gensym("secrete_value")
-
 need(var::DynamicVar) = begin
-  value = getvalue(var, secret_value, current_task())
-  @assert value !== secret_value "No value defined for $var"
+  value = getvalue(var, Base.secret_table_token, current_task())
+  @assert value !== Base.secret_table_token "No value defined for $var"
   value
 end
 
@@ -82,7 +73,7 @@ parent(task::Task) = task.parent
 isroot(task::Task) = task.parent == task
 const empty_scope = Base.ImmutableDict{DynamicVar,Any}()
 getscope(task::Task) = begin
-  s = storage(task)
+  s = Base.get_task_tls(task)
   b = get(s, getscope, s)
   if b === s
     s[getscope] = empty_scope
