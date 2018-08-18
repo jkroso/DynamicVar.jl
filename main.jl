@@ -14,23 +14,27 @@ dynamic_eq(def) = begin
 end
 
 # Alters the value of a dynamic variables within the scope of an expression
-dynamic_let(ex) =
+dynamic_let(ex) = begin
+  vars = Meta.isexpr(ex.args[1], :block) ? ex.args[1].args : [ex.args[1]]
   quote
-    t = @task $(esc(ex.args[1]))
-    $([:(bind($(esc(b.args[1])), $(esc(b.args[2])), t)) for b in ex.args[2:end]]...)
+    t = @task $(esc(ex.args[2]))
+    $([:(bind($(esc(b.args[1])), $(esc(b.args[2])), t)) for b in vars]...)
     schedule(t)
-    wait(t)
+    fetch(t)
   end
+end
 
-dynamic_let!(ex) =
+dynamic_let!(ex) = begin
+  vars = Meta.isexpr(ex.args[1], :block) ? ex.args[1].args : [ex.args[1]]
   quote
     t = current_task()
     old = getscope(t)
-    $([:(bind($(esc(b.args[1])), $(esc(b.args[2])), t)) for b in ex.args[2:end]]...)
-    result = $(esc(ex.args[1]))
+    $([:(bind($(esc(b.args[1])), $(esc(b.args[2])), t)) for b in vars]...)
+    result = $(esc(ex.args[2]))
     setscope(t, old)
     result
   end
+end
 
 setscope(t::Task, scope) = Base.get_task_tls(t)[getscope] = scope
 
