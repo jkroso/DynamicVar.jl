@@ -8,9 +8,11 @@ dynamic_let!(ex) = begin
   quote
     old = [$([:($(esc(x.args[1]))[]) for x in vars]...)]
     $([:($(esc(b.args[1]))[] = $(esc(b.args[2]))) for b in vars]...)
-    result = $(esc(ex.args[2]))
-    $([:($(esc(b.args[1]))[] = old[$i]) for (i,b) in enumerate(vars)]...)
-    result
+    try
+      $(esc(ex.args[2]))
+    finally
+      $([:($(esc(b.args[1]))[] = old[$i]) for (i,b) in enumerate(vars)]...)
+    end
   end
 end
 

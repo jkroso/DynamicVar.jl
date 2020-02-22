@@ -1,4 +1,4 @@
-@require "." @dynamic!
+@use "." @dynamic!
 
 @dynamic! a = 2
 @test a[] == 2
